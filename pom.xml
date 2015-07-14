@@ -1,0 +1,151 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>sample</groupId>
+  <artifactId>trending_hashtags</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  
+  <repositories>
+    <repository>
+      <id>central</id>
+      <!-- This should be at top, it makes maven try the central repo first and then others and hence faster dep resolution -->
+      <name>Maven Repository</name>
+      <url>https://repo1.maven.org/maven2</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    
+    <repository>
+      <id>twttr-repo</id>
+      <name>Twttr Repository</name>
+      <url>http://maven.twttr.com</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
+    
+    <repository>
+        <id>twttr4j-repo</id>
+       <name>Twttr4j Repository</name>
+        <url>http://twitter4j.org/maven2</url>
+    </repository>
+	
+	<repository>
+        <id>typesafe</id>
+       <name>Typesafe</name>
+        <url>https://repo.typesafe.com/typesafe/releases/</url>
+    </repository>
+	
+	
+  </repositories>
+   
+  <!-- Maven profiles allow you to support both Scala 2.10 and Scala 2.11 with
+    the right dependencies for modules specified for each version separately -->
+  <profiles>
+    <profile>
+      <id>scala-2.10</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <scalaVersion>2.10.4</scalaVersion>
+        <!-- change to "2.11" once Scala 2.11.0 final is out -->
+        <scalaBinaryVersion>2.10</scalaBinaryVersion>
+      </properties>
+      <dependencies>
+          <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scalaVersion}</version>
+          </dependency>
+          <!-- dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-parser-combinators_${scalaBinaryVersion}</artifactId>
+            <version>1.0.3</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-swing_${scalaBinaryVersion}</artifactId>
+            <version>1.0.1</version>
+          </dependency-->
+          <dependency>
+		<groupId>org.apache.spark</groupId>
+			<artifactId>spark-streaming-twitter_${scalaBinaryVersion}</artifactId>
+			<version>1.4.0</version>
+		</dependency>
+          <dependency>
+      		<groupId>org.apache.spark</groupId>
+      		<artifactId>spark-core_${scalaBinaryVersion}</artifactId>
+      		<version>1.4.0</version>
+    	   </dependency>
+    	 <dependency>
+      		<groupId>org.apache.spark</groupId>
+      		<artifactId>spark-streaming_${scalaBinaryVersion}</artifactId>
+      		<version>1.4.0</version>
+    	</dependency>
+    	
+    	<dependency>
+			<groupId>com.twitter</groupId>
+			<artifactId>finagle-redis_2.10</artifactId>
+			<version>6.26.0</version>
+		</dependency>
+     
+      </dependencies>
+    </profile>
+    <profile>
+      <id>scala-2.10</id>
+      <properties>
+        <scalaVersion>2.10.4</scalaVersion>
+        <scalaBinaryVersion>2.10</scalaBinaryVersion>
+      </properties>
+      <dependencies>
+          <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scalaVersion}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-swing</artifactId>
+            <version>${scalaVersion}</version>
+          </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
+  <build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <version>3.1.6</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <args>
+            <!-- work-around for https://issues.scala-lang.org/browse/SI-8358 -->
+            <arg>-nobootcp</arg>
+          </args>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
