@@ -6,5 +6,5 @@ IP_ADDRESS=$1
 
 while true; do
     sleep 2
-    redis-cli -h "$IP_ADDRESS" < test_file
+    redis-cli -h "$IP_ADDRESS" < command_file
 done
