@@ -14,16 +14,13 @@ import com.twitter.util.Await
 import twitter4j.Status
 import java.util.Properties
 import java.io.FileInputStream
-import org.apache.log4j.{Level, Logger}
-//import java.util.Properties
-//import java.io.FileInputStream
+
 
 /**
- * Calculates popular hashtags (topics) over sliding 10 and 60 second windows from a Twitter
- * stream. The stream is instantiated with credentials and optionally filters supplied by the
- * command line arguments.
- *
- * Run this on your local machine as
+ * Calculates popular hashtags (topics) over sliding 120 second windows from a Twitter
+ * stream and updates a Redis sorted set. 
+ * The stream is instantiated with credentials from a config.properties files.
+ * Expected command line arguments: <Redis IP address> <twitter filters>
  *
  */
 object TrendingHashTags {
@@ -35,8 +32,13 @@ object TrendingHashTags {
   }
   
   def main(args: Array[String]) {
-       
-    val filters = args
+    if (args.length==0){
+      System.err.println("Usage: TrendingHashTags redisIP [twitter Filters]")
+      System.exit(1)
+    }
+    val redisIP = args(0)
+    val filters = args.takeRight(args.length-1)
+    
         
     val (stream, ssc) = createTwitterSparkStream(filters)
         
@@ -53,7 +55,7 @@ object TrendingHashTags {
     topCounts.foreachRDD(rdd => {
       val topList = rdd.take(CONSTANTS.TOP_TRENDING_TAGS)
       println("\nPopular topics in last 120 seconds (%s total):".format(rdd.count()))
-      insertMicroBatchIntoRedis(topList)
+      insertMicroBatchIntoRedis(topList, redisIP)
     })
 
     ssc.start()
@@ -65,8 +67,8 @@ object TrendingHashTags {
     return status.getText.split(" ").filter(_.startsWith("#"))
   }
   
-  def insertMicroBatchIntoRedis(topList : Array[(Int, String)]) = {
-        val redisClient = TransactionalClient("10.51.78.48:6379")
+  def insertMicroBatchIntoRedis(topList : Array[(Int, String)], redisIP : String) = {
+        val redisClient = TransactionalClient(redisIP + ":6379")
         redisClient.select(1)
         
         var sequence: Seq[Command] = Seq(ZRemRangeByRank(StringToChannelBuffer("top_tags"), 0, -1))
@@ -95,7 +97,7 @@ object TrendingHashTags {
     System.setProperty("twitter4j.oauth.accessTokenSecret", prop.getProperty("accessTokenSecret"))
     
     val sparkConf = new SparkConf().setMaster("local[2]").setAppName("TrendingHashTags")  
-    val ssc = new StreamingContext(sparkConf, Seconds(2))
+    val ssc = new StreamingContext(sparkConf, Seconds(CONSTANTS.BATCH_DURATION))
     ssc.checkpoint("/tmp")
     
     val stream = TwitterUtils.createStream(ssc, None, filters)
